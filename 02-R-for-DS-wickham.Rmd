@@ -1,0 +1,115 @@
+---
+title: "R for Data Science"
+output: html_notebook
+---
+
+This is my work following [R for Data science](https://r4ds.had.co.nz/), by Chadley Wickham and Garret Grolemund.
+
+# 1 - Introduction
+
+Install required packages:
+
+```{r}
+install.packages(c("tidyverse","nycflights13", "gapminder", "Lahman"))
+```
+
+Useful for recreating data:
+
+```{r}
+dput(mtcars)
+```
+
+Well, that was easy!
+
+# 2 - Data visualization
+
+```{r}
+library(tidyverse)
+```
+
+## First steps
+
+```{r}
+mpg
+```
+
+Useful basic functions:
+
+```{r}
+length(mpg)
+
+nrow(mpg)
+ncol(mpg)
+glimpse(mpg)
+```
+
+## Aesthetic mappings
+
+```{r}
+ggplot(mpg) + 
+  geom_point(aes(x=displ, y=hwy, color=year), position="jitter" )
+```
+
+## Facets
+
+```{r}
+ggplot(mpg) + 
+  geom_point(aes(cty, hwy), position="jitter") +
+  facet_wrap(~ year)
+```
+
+```{r}
+ggplot(mpg) + 
+  geom_point(aes(cty, hwy), position="jitter") +
+  facet_grid(year ~ fl)
+```
+
+## Geometric objects
+
+
+```{r}
+ggplot(mpg) + 
+  geom_smooth(aes(cty, hwy), position="jitter") +
+  facet_grid(year ~ fl)
+```
+
+
+## Statistical transformations
+
+
+
+```{r}
+ggplot(diamonds) + 
+  stat_summary(aes(cut, depth), fun=median)
+```
+
+
+## Position adjustments
+
+Fill vs color
+
+"identity", "dodge", "fill", "jitter"
+
+
+## Coordinate systems
+
+Me lo fumo un poco.
+
+## The layered grammar of graphics
+
+```
+ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(
+     mapping = aes(<MAPPINGS>),
+     stat = <STAT>, 
+     position = <POSITION>
+  ) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>
+```
+
+# Workflow: basics
+
+`Alt + Shift + K`: bring up the keyboard shortcut reference.
+
+
