@@ -113,3 +113,158 @@ ggplot(data = <DATA>) +
 `Alt + Shift + K`: bring up the keyboard shortcut reference.
 
 
+```{r}
+seq(1, 234, length.out=7)
+```
+
+# Data transformation
+
+```{r}
+library(nycflights13)
+library(tidyverse)
+
+```
+
+## `filter`
+
+`filter`, `arrange`, `select`, `mutate`, `summarise`
+
+
+```{r}
+flights %>%
+  filter(carrier == "DL") %>% 
+  mutate(sched_hour = floor(sched_dep_time / 100)) %>% 
+  arrange(desc(dep_delay))
+```
+
+#### Exercises
+
+(5.2.4)
+
+1. Find all flights that
+
+  1. Had an arrival delay of two or more hours
+
+```{r}
+flights %>% 
+  filter(arr_delay > 120)
+```
+
+  2. Flew to Houston (IAH or HOU)
+
+```{r}
+flights %>% 
+  filter(dest == "IAH" | dest == "HOU")
+```
+  
+  3. Were operated by United, American, or Delta
+  
+  4. Departed in summer (July, August, and September)
+  
+  5. Arrived more than two hours late, but didn’t leave late
+
+
+```{r}
+flights %>% 
+  filter(arr_delay > 120 & dep_delay < 15)
+```
+  
+  6. Were delayed by at least an hour, but made up over 30 minutes in flight
+  
+  7. Departed between midnight and 6am (inclusive)
+
+2. Another useful dplyr filtering helper is between(). What does it do? Can you use it to simplify the code needed to answer the previous challenges?
+
+```{r}
+flights %>% 
+  filter(between(dep_time, 0, 600) )
+```
+
+
+3. How many flights have a missing dep_time? What other variables are missing? What might these rows represent?
+
+```{r}
+flights %>% 
+  filter(is.na(dep_time)) 
+```
+Cancelled flights
+
+4. Why is NA ^ 0 not missing? Why is NA | TRUE not missing? Why is FALSE & NA not missing? Can you figure out the general rule? (NA * 0 is a tricky counterexample!)
+
+
+## `arrange`
+
+
+```{r}
+flights %>% 
+  mutate(speed = distance / air_time) %>%
+  arrange(desc(speed))
+```
+
+
+```{r}
+ggplot(flights) + 
+  geom_smooth(aes(x=distance, y=air_time))
+```
+
+How would I plot only those that deviate from the trend a lot (ie plotting a different dataset on the same graph?)
+
+```{r}
+ggplot(flights) + 
+  geom_smooth(aes(x=distance, y=air_time)) +
+  geom_point(data=filter(flights, (distance / air_time) > 8.5), aes(x=distance, y=air_time), position="jitter")
+```
+
+### `select`
+
+
+```{r}
+flights %>% 
+  select(-(year:arr_delay))
+```
+
+
+
+There are a number of helper functions you can use within select():
+
+* starts_with("abc"): matches names that begin with “abc”.
+* ends_with("xyz"): matches names that end with “xyz”.
+* contains("ijk"): matches names that contain “ijk”.
+* matches("(.)\\1"): selects variables that match a regular expression. This one matches any variables that contain repeated characters. You’ll learn more about regular expressions in strings.
+* num_range("x", 1:3): matches x1, x2 and x3.
+
+`rename()` for renaming variables.
+
+`everything()`
+
+### `mutate`
+
+`transmute()` keeps only the new variables.
+
+Useful transformations:
+
+* `%/%`: integer division
+* `%%`: modulo.
+* logs
+* `lead()` and `lag()`.
+* `cumsum` and `cummean`
+* `min_rank`, `row_number`, `dense_rank`, `percent_rank`, `cume_dist`, `ntile`
+
+
+### `summarise`
+
+`mean`, `median`, `n()`, `min()`, `quantile`, `max`, `first`, `nth`, `last`, `n_distinct`, counts and means of booleans.
+
+Subsetting:
+
+```{r}
+flights %>% 
+  filter(!is.na(dep_delay)) %>%
+  group_by(year, month, day) %>%
+  summarise(avg_delay=mean(dep_delay),
+            avg_pos_delay=mean(dep_delay[dep_delay>0]))
+```
+
+#### Ungrouping
+
+With `ungroup`.
