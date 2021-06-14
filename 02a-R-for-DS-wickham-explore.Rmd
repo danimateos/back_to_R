@@ -1,16 +1,18 @@
 ---
 title: "R for Data Science"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 This is my work following [R for Data science](https://r4ds.had.co.nz/), by Chadley Wickham and Garret Grolemund.
 
-# 1 - Introduction
+# 2 - Introduction
 
 Install required packages:
 
 ```{r}
-install.packages(c("tidyverse","nycflights13", "gapminder", "Lahman"))
+install.packages(c("tidyverse","nycflights13", "gapminder", "Lahman"), repos = "http://cran.us.r-project.org")
 ```
 
 Useful for recreating data:
@@ -21,7 +23,7 @@ dput(mtcars)
 
 Well, that was easy!
 
-# 2 - Data visualization
+# 3 - Data visualization
 
 ```{r}
 library(tidyverse)
@@ -108,7 +110,7 @@ ggplot(data = <DATA>) +
   <FACET_FUNCTION>
 ```
 
-# Workflow: basics
+# 4 - Workflow: basics
 
 `Alt + Shift + K`: bring up the keyboard shortcut reference.
 
@@ -117,7 +119,7 @@ ggplot(data = <DATA>) +
 seq(1, 234, length.out=7)
 ```
 
-# Data transformation
+# 5 - Data transformation
 
 ```{r}
 library(nycflights13)
@@ -249,7 +251,7 @@ Useful transformations:
 * `lead()` and `lag()`.
 * `cumsum` and `cummean`
 * `min_rank`, `row_number`, `dense_rank`, `percent_rank`, `cume_dist`, `ntile`
-
+* `ifelse()`
 
 ### `summarise`
 
@@ -268,3 +270,38 @@ flights %>%
 #### Ungrouping
 
 With `ungroup`.
+
+
+# 6 - Scripts
+
+Pretty basic.
+
+`Cmd + Shift + S` to run a whole script.
+
+# 7 - Exploratory Data Analysis
+
+From the book:
+
+> There is no rule about which questions you should ask to guide your research. However, two types of questions will always be useful for making discoveries within your data. You can loosely word these questions as:
+> 1. What type of variation occurs within my variables?
+> 2. What type of covariation occurs between my variables?
+
+I like that.
+
+`coord_cartesian` layer has `xlim` and `ylim` arguments. ggplot2 also has `xlim()` and `ylim()`, which discard data instead of affecting the viewport.
+
+# 8 - Workflow: projects
+
+Create a project, and that will set your working directory.
+
+
+* Create an RStudio project for each data analysis project.
+* Keep data files there; we’ll talk about loading them into R in data import.
+* Keep scripts there; edit them, run them in bits or as a whole.
+* Save your outputs (plots and cleaned data) there.
+* Only ever use relative paths, not absolute paths.
+
+
+
+
+
