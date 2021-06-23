@@ -107,6 +107,490 @@ Wider used to create new columns, longer new rows.
 `complete()` checks all possible combinations and returns all unique.
 
 
+# 13 - Relational data
+
+Intro to relations with the flights dataset as an example.
+
+```{r}
+library(nycflights13)
+airlines
+```
+
+
+```{r}
+airports %>%
+  filter(faa == 'JFK')
+```
+
+```{r}
+weather
+```
+
+```{r}
+weather %>%
+  count(month) %>%
+    ggplot() + 
+      geom_col(aes(x=month, y=n))
+```
+
+```{r}
+weather %>%
+  ggplot() + 
+    geom_bar(aes(x=month))
+```
+
+### Exercises 13.3.1
+
+Add a surrogate key to flights
+
+```{r add_surrogate}
+flights2 = flights %>% mutate(surrogate = paste(year, month, day, carrier, flight, origin, dest, sep='-'))
+
+flights2 %>% 
+  sample(20) %>% 
+  select(surrogate)
+```
+
+
+## Mutating joins
+
+Prep 
+
+```{r}
+flights2 = flights %>% 
+  select(year:day, hour, origin, dest, tailnum, carrier)
+
+flights2 %>% 
+  left_join(airlines)
+```
+
+Also: `inner_join()`, `left_join()`, `full_join()` 
+
+
+## Join keys
+
+* Default: `by = NULL`: all common variables
+* `by = "x"`: Same but only specified columns. Adds suffixes.
+* `by = c("a" = "b")`: If they have different names.
 
 
 
+### Exercises 13.4.6
+
+1. Compute the average delay by destination, then join on the airports data frame so you can show the spatial distribution of delays. Here’s an easy way to draw a map of the United States:
+
+```{r}
+flights %>%
+  group_by(dest) %>%
+  summarise(percent_delayed = mean(arr_delay > 15, na.rm=TRUE),
+            n = n()) %>%
+  left_join(airports, by=c('dest' = 'faa')) %>%
+  
+  ggplot(aes(lon, lat, size=n, color=percent_delayed)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap() + scico::scale_color_scico()
+```
+
+3. Is there a relationship between the age of a plane and its delays?
+
+```{r}
+flights %>% 
+  group_by(tailnum) %>%
+  summarise(av_delay = mean(dep_delay, na.rm=TRUE)) %>%
+  left_join(planes) %>%
+  
+  ggplot() +
+    geom_bin2d(aes(year, av_delay))
+```
+
+With boxplots:
+
+```{r}
+flights %>% 
+  group_by(tailnum) %>%
+  summarise(av_delay = mean(dep_delay, na.rm=TRUE),
+            departures = n()) %>%
+  filter(departures > 10) %>%
+  left_join(planes) %>%
+  ggplot() +
+    geom_boxplot(aes(x=as_factor(year), y=av_delay))
+```
+Eeehhh... kinda?
+
+
+What happened on June 13 2013? Display the spatial pattern of delays, and then use Google to cross-reference with the weather.
+
+
+```{r}
+flights %>%
+  filter(year==2013, month== 6, day==13) %>%
+  group_by(dest) %>%
+  summarise(percent_delayed = mean(arr_delay > 15, na.rm=TRUE),
+            n = n()) %>%
+  left_join(airports, by=c('dest' = 'faa')) %>%
+  
+  ggplot(aes(lon, lat, size=n, color=percent_delayed)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap() + scico::scale_color_scico()
+```
+
+Hurricane? Google says Colorado fires, but that's not apparent from the data...
+
+
+### Other implementations
+
+`base::merge`: it's worse and slower.
+
+Implied from the text is the fact that R can't do joins not based on equality (non-equijoins).
+
+## Filtering joins
+
+`semi_join()`
+
+`anti_join()`
+
+## Set operations
+
+`intersect(x, y)`
+
+`union(x, y)`: doesn't repeat rows in the intersection.
+
+`setdiff(x, y)`
+
+# 14 - Strings
+
+```{r}
+c(str_length('dani'), str_c('a', 'b'), str_sub('asdffsd', 2, 5))
+```
+
+
+
+## regex
+
+```{r}
+samples = c('holi', 'queriod', 'comeme', 'el', 'toto')
+
+str_view(samples, '[aeiou]')
+```
+```{r}
+str_view_all(samples, '[aeiou]')
+```
+
+```{r}
+str_view_all(samples, '[aeiou]{2}')
+```
+
+* `{n}`: exactly n
+* `{n,}`: n or more
+* `{,m}`: at most m
+* `{n,m}`: between n and m
+
+
+### Grouping and backreferences
+
+
+
+
+
+```{r}
+str_view(fruit, '(..)\\1', match=TRUE)
+```
+
+
+## Tools
+
+
+Match/no match:
+
+`str_detect`
+
+```{r}
+words[str_detect(words, '^w')]
+```
+
+n_matches: `str_count`.
+
+Extract matches: `str_extract`.
+
+Match components: `str_match` gives them as a matrix: one column for the full match, then one for each of the groups.
+
+`str_replace()` and `str_replace_all()`
+
+`str_split()`
+
+
+`str_view(target, pattern) == str_view(target, regex(pattern))`. `regex` has more options.
+
+## Other uses of regular expressions
+
+`apropos()`: searches all objects available in the environment.
+
+`dir()`
+
+## stringi
+
+More advanced package with more functionality.
+
+str_view vs stri_view
+
+# 15 - Factors
+
+`factor(x, levels=levels)`
+
+`parse_factor()`
+
+`fct_inorder()`
+
+```{r}
+gss_cat
+```
+
+```{r}
+gss_cat %>%
+  count(race)
+```
+
+## Modifying factor order
+
+`fct_reorder`
+
+_Another type of reordering is useful when you are colouring the lines on a plot. `fct_reorder2()` reorders the factor by the y values associated with the largest x values. This makes the plot easier to read because the line colours line up with the legend._
+
+`fct_infreq`.
+
+```{r}
+gss_cat %>% 
+  ggplot() +
+    geom_boxplot(aes(x=fct_reorder(relig, tvhours), y=tvhours))
+```
+
+
+## Modifying factor levels
+
+`fct_recode()`: Also allows grouping if you assign same new value to several old levels.
+
+`fct_collapse()`, `fct_lump()`.
+
+# 16 - Dates and times
+
+```{r}
+library(lubridate)
+```
+
+
+## Dates, datetimes, and times.
+
+### From strings
+
+helper parser functions: `ymd()`, `mdy()`, etc:
+
+```{r}
+ymd("2021-06-21")
+```
+```{r}
+ymd(20210621)
+```
+
+```{r}
+ymd_hm("20210621 14:00")
+```
+
+```{r}
+ymd(today(), tz='UTC')
+```
+
+
+## From columns in a DataFrame
+
+
+`make_date()` and `make_datetime()`.
+
+
+```{r}
+flights %>%
+  select(year, month, day, hour, minute) %>%
+  mutate(departure_dt = make_datetime(year, month, day, hour, minute))
+```
+
+```{r}
+make_datetime_100 <- function(year, month, day, time) {
+  make_datetime(year, month, day, time %/% 100, time %% 100)
+}
+
+flights_dt <- flights %>% 
+  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
+  mutate(
+    dep_time = make_datetime_100(year, month, day, dep_time),
+    arr_time = make_datetime_100(year, month, day, arr_time),
+    sched_dep_time = make_datetime_100(year, month, day, sched_dep_time),
+    sched_arr_time = make_datetime_100(year, month, day, sched_arr_time)
+  ) %>% 
+  select(origin, dest, ends_with("delay"), ends_with("time"))
+
+flights_dt
+```
+
+Plot:
+
+```{r}
+flights_dt %>%
+  ggplot(aes(dep_time)) + 
+  geom_freqpoly(binwidth=86400)
+```
+
+### To date from datetime and vv
+
+
+```{r}
+as_date(now())
+as_datetime(today())
+```
+
+## Components of date-times
+
+`year`, `month`, `yday`, `wday`, `hour`, `minute`, `second`.
+
+```{r}
+flights_dt %>%
+  group_by(minute(dep_time)) %>%
+  summarise(avg_delay=mean(arr_delay, na.rm=TRUE)) %>%
+  ggplot() + 
+    geom_line(aes("minute(dep_time)", avg_delay))
+```
+
+TODO: ask someone: why does the previous one not work??
+
+```{r}
+flights_dt %>%
+  mutate(minute=minute(dep_time)) %>%
+  group_by(minute) %>%
+  summarise(avg_delay=mean(arr_delay, na.rm=TRUE)) %>%
+  ggplot() + 
+    geom_line(aes(minute, avg_delay))
+```
+
+## Rounding 
+
+`floor_date`, `round_date`, `ceiling_date`.
+
+```{r}
+left = ymd_hm('20210623 00:32')
+
+right = ymd_hm('20210623 17:22')
+
+floor_date(right, 'hour') - right
+```
+
+
+## Setting components
+
+By using the accessor functions
+
+```{r}
+this_date = ymd('20210523')
+
+year(this_date) = year(this_date) - 37
+this_date
+```
+
+`update` allows you to copy-modify and to set several components at once.
+
+Also useful inside mutate:
+
+
+```{r}
+flights_dt %>%
+  mutate(dep_hour=update(dep_time, yday = 1)) %>%
+  ggplot(aes(dep_hour)) + 
+    geom_freqpoly(binwidth=60)
+```
+
+## Time Spans
+
+### Durations
+
+```{r}
+this_date - update(this_date, yday=1)
+
+class(this_date - update(this_date, yday=1))
+```
+
+```{r}
+duration = as.duration(this_date - update(this_date, wday=1))
+duration
+```
+
+```{r}
+dseconds(12)
+```
+
+```{r}
+ddays(1)
+```
+
+> Durations always record the time span in seconds. Larger units are created by converting minutes, hours, days, weeks, and years to seconds at the standard rate (60 seconds in a minute, 60 minutes in an hour, 24 hours in day, 7 days in a week, 365 days in a year).
+
+
+### Periods
+
+```{r}
+seconds(12)
+```
+
+```{r}
+5 * days(1)
+```
+
+Periods take into account timezones in a way that durations do not.
+
+### Intervals
+
+An interval is a duration *with a starting point*.
+
+```{r}
+ymd(20200228) + days(5)
+```
+
+```{r}
+ymd(20200228) - years(1) + days(5)
+```
+
+```{r}
+next_year = today() + years(1)
+
+an_interval = today() %--% next_year
+an_interval
+```
+
+```{r}
+an_interval %/% days(1)
+```
+
+
+## Time zones
+
+> In R, the time zone is an attribute of the date-time that only controls printing. For example, these three objects represent the same instant in time:
+
+```{r}
+str_subset(OlsonNames(), 'New') 
+```
+
+
+`with_tz` keeps the actual instant in time and shows a copy with different timezone.
+
+`force_tz` imposes the tzone and changes the instante that the object refers to.
+
+```{r}
+birthday = ymd_hm('19840523 02:00 Europe/Madrid')
+
+with_tz(birthday, tzone='America/New_York')
+```
+
+```{r}
+force_tz(birthday, tzone='America/New_York')
+```
+
+
+* `c()` Will drop timezones!
